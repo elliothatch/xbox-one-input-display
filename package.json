@@ -1,0 +1,18 @@
+{
+    "name": "xbox-one-input-display",
+    "version": "0.1.0",
+    "description": "xbox one controller live input display for linux command line",
+    "main": "index.js",
+    "scripts": {
+    	"start": "node index.js"
+    },
+    "author": {
+        "name": "Elliot Hatch",
+        "email": "elliot.hatch@gmail.com"
+    },
+    "license": "MIT",
+    "devDependencies": {},
+    "dependencies": {
+        "terminal-kit": "^1.28.9"
+    }
+}
