@@ -52,28 +52,28 @@ const buttons = {
 			x: 30,
 			y: 9
 		},
-		state: '0',
+		state: 0,
 	},
 	BTN_C: {
 		position: {
 			x: 27,
 			y: 8
 		},
-		state: '0',
+		state: 0,
 	},
 	BTN_NORTH: {
 		position: {
 			x: 30,
 			y: 7
 		},
-		state: '0',
+		state: 0,
 	},
 	BTN_EAST: {
 		position: {
 			x: 33,
 			y: 8
 		},
-		state: '0',
+		state: 0,
 	},
 	// left stick
 	BTN_TL2: {
@@ -81,7 +81,7 @@ const buttons = {
 			x: 10,
 			y: 7,
 		},
-		state: '0',
+		state: 0,
 	},
 	// right stick
 	BTN_TR2: {
@@ -89,21 +89,23 @@ const buttons = {
 			x: 24,
 			y: 11,
 		},
-		state: '0',
+		state: 0,
 	},
+	// start
 	BTN_TR: {
 		position: {
 			x: 22,
 			y: 8
 		},
-		state: '0',
+		state: 0,
 	},
+	// back
 	BTN_TL: {
 		position: {
 			x: 17,
 			y: 8
 		},
-		state: '0',
+		state: 0,
 	},
 	// xbox button
 	KEY_HOMEPAGE: {
@@ -111,7 +113,7 @@ const buttons = {
 			x: 20,
 			y: 5
 		},
-		state: '0',
+		state: 0,
 	},
 	// left shoulder
 	BTN_WEST: {
@@ -119,7 +121,7 @@ const buttons = {
 			x: 5,
 			y: 3,
 		},
-		state: '0',
+		state: 0,
 	},
 	// right shoulder
 	BTN_Z: {
@@ -127,7 +129,7 @@ const buttons = {
 			x: 28,
 			y: 3,
 		},
-		state: '0',
+		state: 0,
 	},
 	/*
 	ABS_HAT0Y: {
@@ -141,6 +143,70 @@ const buttons = {
 		state: '0',
 	},
 	*/
+};
+
+const dpadButtons = {
+	ABS_HAT0X: {
+		positionPos: {
+			x: 16,
+			y: 11,
+		},
+		positionNeg: {
+			x: 12,
+			y: 11,
+		},
+		state: 0,
+	},
+	ABS_HAT0Y: {
+		positionPos: {
+			x: 14,
+			y: 12,
+		},
+		positionNeg: {
+			x: 14,
+			y: 10,
+		},
+		state: 0,
+	}
+};
+
+const analogSticks = {
+	ABS_X: {
+		position: {
+			x: 10,
+			y: 7,
+		},
+		state: 65536/2,
+		compliment: 'ABS_Y',
+		direction: 'x',
+	},
+	ABS_Y: {
+		position: {
+			x: 10,
+			y: 7,
+		},
+		state: 65536/2,
+		compliment: 'ABS_X',
+		direction: 'y',
+	},
+	ABS_RX: {
+		position: {
+			x: 24,
+			y: 11,
+		},
+		state: 65536/2,
+		compliment: 'ABS_RY',
+		direction: 'x',
+	},
+	ABS_RY: {
+		position: {
+			x: 24,
+			y: 11,
+		},
+		state: 65536/2,
+		compliment: 'ABS_RX',
+		direction: 'y',
+	},
 };
 
 function draw() {
@@ -195,9 +261,17 @@ controllerEvents.on('line', function(line) {
 			if(buttonMatch) {
 				const eventType = buttonMatch[2];
 				const eventButton = buttonRegex.exec(line)[2];
-				const eventValue = line.match(/value (.*)/)[1];
+				const eventValue = parseInt(line.match(/value (.*)/)[1]);
 				if(buttons[eventButton]) {
 					buttons[eventButton].state = eventValue;
+					drawController();
+				}
+				else if(dpadButtons[eventButton]) {
+					dpadButtons[eventButton].state = eventValue;
+					drawController();
+				}
+				else if(analogSticks[eventButton]) {
+					analogSticks[eventButton].state = eventValue;
 					drawController();
 				}
 			}
@@ -230,10 +304,67 @@ function drawController() {
 		screenBuffer.put({
 			position: button.position,
 			attr: {
-				bgColor: button.state === '0'? 'black': 'white'
+				bgColor: button.state === 1? 'white': 'black'
 			}
 		}, '_');
 	});
+
+	Object.keys(dpadButtons).forEach((axisName) => {
+		const axis = dpadButtons[axisName];
+		screenBuffer.moveTo(axis.positionPos.x, axis.positionPos.y);
+		screenBuffer.put({
+			position: axis.positionPos,
+			attr: {
+				bgColor: axis.state === 1? 'white': 'black'
+			}
+		}, '_');
+
+		screenBuffer.moveTo(axis.positionNeg.x, axis.positionNeg.y);
+		screenBuffer.put({
+			position: axis.positionNeg,
+			attr: {
+				bgColor: axis.state === -1? 'white': 'black'
+			}
+		}, '_');
+	});
+
+	const maxAnalogValue = 65536 - 1;
+	const midAnalogValue = 65536/2;
+	Object.keys(analogSticks).forEach((axisName) => {
+		const axis = analogSticks[axisName];
+
+		const normalizedState = 2*(axis.state/maxAnalogValue)-1;
+
+		const position1 = {
+			x: axis.position.x + (axis.direction === 'x'? -1: 0),
+			y: axis.position.y + (axis.direction === 'y'? -1: 0),
+		};
+
+		const position2 = {
+			x: axis.position.x + (axis.direction === 'x'? 1: 0),
+			y: axis.position.y + (axis.direction === 'y'? 1: 0),
+		};
+
+		const opacity = Math.floor(255*(axis.state / maxAnalogValue));
+
+		screenBuffer.moveTo(position1.x, position1.y);
+		screenBuffer.put({
+			position: position1,
+			attr: {
+				bgColor: normalizedState < -0.1? 'white': 'black',
+			}
+		}, ' ');
+
+		screenBuffer.moveTo(position2.x, position2.y);
+		screenBuffer.put({
+			position: position2,
+			attr: {
+				bgColor: normalizedState > 0.1? 'white': 'black',
+			}
+		}, ' ');
+	});
+
+	const maxTriggerValue = 1024 - 1;
 
 	screenBuffer.moveTo(0, 0);
 	draw();
