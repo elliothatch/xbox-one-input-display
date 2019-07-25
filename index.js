@@ -108,7 +108,7 @@ const buttons = {
 		state: 0,
 	},
 	// xbox button
-	KEY_HOMEPAGE: {
+	KEY_MENU: {
 		position: {
 			x: 20,
 			y: 5
@@ -209,6 +209,23 @@ const analogSticks = {
 	},
 };
 
+const triggerButtons = {
+	ABS_Z: {
+		position: {
+			x: 6,
+			y: 2,
+		},
+		state: 0,
+	},
+	ABS_RZ: {
+		position: {
+			x: 33,
+			y: 2,
+		},
+		state: 0,
+	}
+};
+
 function draw() {
 	screenBuffer.draw({
 		position: {
@@ -272,6 +289,10 @@ controllerEvents.on('line', function(line) {
 				}
 				else if(analogSticks[eventButton]) {
 					analogSticks[eventButton].state = eventValue;
+					drawController();
+				}
+				else if(triggerButtons[eventButton]) {
+					triggerButtons[eventButton].state = eventValue;
 					drawController();
 				}
 			}
@@ -365,6 +386,18 @@ function drawController() {
 	});
 
 	const maxTriggerValue = 1024 - 1;
+	Object.keys(triggerButtons).forEach((triggerName) => {
+		const trigger = triggerButtons[triggerName];
+		const normalizedState = trigger.state / 1024;
+
+		screenBuffer.moveTo(trigger.position.x, trigger.position.y);
+		screenBuffer.put({
+			position: trigger.position,
+			attr: {
+				bgColor: normalizedState > 0.1? 'white': 'black',
+			}
+		}, ' ');
+	});
 
 	screenBuffer.moveTo(0, 0);
 	draw();
