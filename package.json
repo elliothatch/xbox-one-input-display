@@ -13,6 +13,6 @@
     "license": "MIT",
     "devDependencies": {},
     "dependencies": {
-        "terminal-kit": "^1.28.9"
+        "terminal-kit": "^2.1.8"
     }
 }
